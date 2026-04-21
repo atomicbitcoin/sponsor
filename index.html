@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>아토믹 비트코인 팟캐스트 — 스폰서 트래커</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080c14;
+    --surface: #0d1520;
+    --surface2: #111d2e;
+    --border: #1e3050;
+    --nord: #1a6ab1;
+    --nord-lite: #2196f3;
+    --gym: #6c3ec1;
+    --gym-lite: #9c6fe8;
+    --gold: #f0a500;
+    --green: #00e676;
+    --yellow: #ffea00;
+    --red: #ff5252;
+    --text: #e8f0fe;
+    --text2: #7a9cc8;
+    --text3: #3d5a80;
+    --mono: 'Space Mono', monospace;
+    --sans: 'Noto Sans KR', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(26,106,177,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(26,106,177,.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap { position: relative; z-index: 1; max-width: 1280px; margin: 0 auto; padding: 24px 20px; }
+
+  /* HEADER */
+  .hdr {
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 28px;
+  }
+  .hdr-left { display: flex; align-items: center; gap: 16px; }
+  .logo {
+    width: 44px; height: 44px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--nord), var(--gym));
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-weight: 700; font-size: 18px; color: #fff;
+  }
+  .hdr-title { font-family: var(--mono); }
+  .hdr-title h1 { font-size: 17px; color: var(--text); letter-spacing: .5px; }
+  .hdr-title p { font-size: 11px; color: var(--text2); margin-top: 3px; font-family: var(--sans); }
+  .badge {
+    font-family: var(--mono); font-size: 10px; color: var(--gold);
+    border: 1px solid var(--gold); padding: 3px 8px; border-radius: 4px;
+  }
+
+  /* STAT CARDS */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px; }
+  .stat {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px 18px; position: relative; overflow: hidden;
+    transition: border-color .2s;
+  }
+  .stat:hover { border-color: var(--nord-lite); }
+  .stat::after {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  }
+  .stat.nord::after { background: linear-gradient(90deg, var(--nord), var(--nord-lite)); }
+  .stat.gym::after { background: linear-gradient(90deg, var(--gym), var(--gym-lite)); }
+  .stat.green::after { background: linear-gradient(90deg, #00c853, var(--green)); }
+  .stat.gold::after { background: linear-gradient(90deg, #e65100, var(--gold)); }
+  .stat-label { font-size: 10px; color: var(--text2); letter-spacing: .8px; text-transform: uppercase; margin-bottom: 8px; font-family: var(--mono); }
+  .stat-val { font-family: var(--mono); font-size: 26px; font-weight: 700; color: var(--text); }
+  .stat-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 6px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 0; }
+  .tab {
+    font-family: var(--mono); font-size: 12px; color: var(--text2);
+    padding: 10px 18px; cursor: pointer; border-radius: 8px 8px 0 0;
+    border: 1px solid transparent; border-bottom: none;
+    transition: all .2s; letter-spacing: .3px;
+    position: relative; top: 1px;
+  }
+  .tab:hover { color: var(--text); background: var(--surface); }
+  .tab.active { color: var(--text); background: var(--surface); border-color: var(--border); }
+  .tab.nord.active { color: var(--nord-lite); border-color: var(--nord); }
+  .tab.gym.active { color: var(--gym-lite); border-color: var(--gym); }
+
+  /* PANEL */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* SPONSOR HEADER BAR */
+  .sponsor-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px; border-radius: 10px 10px 0 0; margin-bottom: 0;
+  }
+  .sponsor-bar.nord { background: linear-gradient(135deg, #0d2e5a, #0d3d7a); border: 1px solid var(--nord); border-bottom: none; }
+  .sponsor-bar.gym { background: linear-gradient(135deg, #1e0a3c, #2e1260); border: 1px solid var(--gym); border-bottom: none; }
+  .sponsor-name { font-family: var(--mono); font-size: 15px; font-weight: 700; }
+  .sponsor-meta { font-size: 11px; color: var(--text2); margin-top: 4px; }
+  .sponsor-amount { font-family: var(--mono); font-size: 20px; font-weight: 700; text-align: right; }
+  .sponsor-amount span { display: block; font-size: 10px; color: var(--text2); font-weight: 400; margin-top: 2px; }
+
+  /* TABLE */
+  .tbl-wrap {
+    border: 1px solid var(--border); border-top: none; border-radius: 0 0 10px 10px; overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead tr { background: var(--surface2); }
+  thead th {
+    padding: 10px 12px; text-align: left; font-family: var(--mono);
+    font-size: 10px; color: var(--text2); letter-spacing: .5px; text-transform: uppercase;
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  thead th:first-child { width: 44px; text-align: center; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,.03); }
+  td { padding: 10px 12px; vertical-align: middle; }
+  td:first-child { text-align: center; font-family: var(--mono); font-size: 11px; }
+
+  /* STATUS BADGE */
+  .status {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 20px; font-size: 10px; font-family: var(--mono);
+    font-weight: 700; letter-spacing: .3px; white-space: nowrap;
+  }
+  .status::before { content: ''; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+  .s-wait { background: rgba(255,234,0,.1); color: var(--yellow); border: 1px solid rgba(255,234,0,.2); }
+  .s-wait::before { background: var(--yellow); }
+  .s-prod { background: rgba(255,152,0,.1); color: #ffb74d; border: 1px solid rgba(255,152,0,.2); }
+  .s-prod::before { background: #ffb74d; }
+  .s-review { background: rgba(33,150,243,.1); color: var(--nord-lite); border: 1px solid rgba(33,150,243,.2); }
+  .s-review::before { background: var(--nord-lite); animation: pulse 1.5s infinite; }
+  .s-done { background: rgba(0,230,118,.1); color: var(--green); border: 1px solid rgba(0,230,118,.2); }
+  .s-done::before { background: var(--green); }
+  .s-paid { background: rgba(240,165,0,.1); color: var(--gold); border: 1px solid rgba(240,165,0,.2); }
+  .s-paid::before { background: var(--gold); }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  /* CHECKBOX CELLS */
+  .ch-cell { text-align: center; }
+  .ch-btn {
+    width: 26px; height: 26px; border-radius: 6px; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 14px; border: 1px solid var(--border);
+    background: transparent; transition: all .15s; user-select: none;
+  }
+  .ch-btn.done { background: rgba(0,230,118,.1); border-color: var(--green); }
+  .ch-btn:hover { border-color: var(--text2); }
+  .ch-btn.done:hover { background: rgba(0,230,118,.2); }
+
+  /* EDITABLE */
+  .editable {
+    background: transparent; border: none; outline: none;
+    color: var(--text); font-family: var(--sans); font-size: 12px;
+    width: 100%; cursor: pointer;
+  }
+  .editable:focus {
+    background: rgba(255,255,255,.04); border-radius: 4px;
+    padding: 2px 6px; cursor: text;
+  }
+  .url-cell { color: var(--nord-lite); font-family: var(--mono); font-size: 11px; }
+  .url-cell:focus { color: var(--text); }
+
+  /* AMOUNT */
+  .amount { font-family: var(--mono); font-size: 12px; }
+  .amount.nord { color: var(--nord-lite); }
+  .amount.gym { color: var(--gym-lite); }
+
+  /* CHANNELS SECTION */
+  .channels-section { margin-top: 28px; }
+  .section-title {
+    font-family: var(--mono); font-size: 12px; color: var(--text2);
+    letter-spacing: .8px; text-transform: uppercase; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .ch-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+  .ch-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 14px; text-align: center;
+  }
+  .ch-card .icon { font-size: 20px; margin-bottom: 6px; }
+  .ch-card .ch-name { font-size: 11px; color: var(--text); font-weight: 500; }
+  .ch-card .ch-handle { font-family: var(--mono); font-size: 10px; color: var(--text2); margin-top: 3px; }
+
+  /* PROGRESS BAR */
+  .progress-wrap { margin-top: 12px; }
+  .prog-label { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10px; color: var(--text2); margin-bottom: 5px; }
+  .prog-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .prog-fill { height: 100%; border-radius: 2px; transition: width .5s ease; }
+  .prog-fill.nord { background: linear-gradient(90deg, var(--nord), var(--nord-lite)); }
+  .prog-fill.gym { background: linear-gradient(90deg, var(--gym), var(--gym-lite)); }
+
+  /* OVERVIEW TAB */
+  .overview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .ov-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 20px; position: relative; overflow: hidden;
+  }
+  .ov-card::before {
+    content: ''; position: absolute; top: 0; left: 0; width: 3px; bottom: 0; border-radius: 10px 0 0 10px;
+  }
+  .ov-card.nord::before { background: var(--nord); }
+  .ov-card.gym::before { background: var(--gym); }
+  .ov-card-title { font-family: var(--mono); font-size: 13px; font-weight: 700; margin-bottom: 14px; }
+  .ov-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); }
+  .ov-row:last-child { border-bottom: none; }
+  .ov-key { font-size: 11px; color: var(--text2); }
+  .ov-val { font-family: var(--mono); font-size: 12px; font-weight: 700; }
+
+  /* SAVE NOTICE */
+  .save-notice {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--green); color: #000; font-family: var(--mono); font-size: 11px;
+    padding: 8px 16px; border-radius: 6px; opacity: 0; pointer-events: none;
+    transition: opacity .3s; z-index: 999;
+  }
+  .save-notice.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <div class="hdr-left">
+      <div class="logo">₿</div>
+      <div class="hdr-title">
+        <h1>아토믹 비트코인 팟캐스트</h1>
+        <p>Atomic Bitcoin Podcast · Sponsor Management Tracker</p>
+      </div>
+    </div>
+    <div class="badge">INTERNAL USE ONLY</div>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="stats">
+    <div class="stat nord">
+      <div class="stat-label">NordVPN 계약</div>
+      <div class="stat-val">$2,700</div>
+      <div class="stat-sub">+ Revenue Share · 5편</div>
+    </div>
+    <div class="stat gym">
+      <div class="stat-label">짐플러스 계약</div>
+      <div class="stat-val">200만원</div>
+      <div class="stat-sub">200,000원/회 · 10회</div>
+    </div>
+    <div class="stat green">
+      <div class="stat-label">완료 에피소드</div>
+      <div class="stat-val" id="total-done">0</div>
+      <div class="stat-sub">/ 15회 전체</div>
+    </div>
+    <div class="stat gold">
+      <div class="stat-label">활성 스폰서</div>
+      <div class="stat-val">2</div>
+      <div class="stat-sub">NordVPN · 짐플러스</div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('overview')">📊 개요</div>
+    <div class="tab nord" onclick="switchTab('nord')">🔵 NordVPN</div>
+    <div class="tab gym" onclick="switchTab('gym')">🟣 짐플러스</div>
+    <div class="tab" onclick="switchTab('channels')">📡 홍보채널</div>
+  </div>
+
+  <!-- OVERVIEW PANEL -->
+  <div class="panel active" id="tab-overview">
+    <div class="overview-grid">
+      <div class="ov-card nord">
+        <div class="ov-card-title">🔵 NordVPN</div>
+        <div class="ov-row"><span class="ov-key">계약금</span><span class="ov-val" style="color:var(--nord-lite)">$2,700</span></div>
+        <div class="ov-row"><span class="ov-key">+ Revenue Share</span><span class="ov-val" style="color:var(--text2)">협의</span></div>
+        <div class="ov-row"><span class="ov-key">총 회차</span><span class="ov-val">5편</span></div>
+        <div class="ov-row"><span class="ov-key">최소 브랜드 통합</span><span class="ov-val">60초 이상</span></div>
+        <div class="ov-row"><span class="ov-key">마감일</span><span class="ov-val">2026-12-31</span></div>
+        <div class="ov-row"><span class="ov-key">콘텐츠 유지 기간</span><span class="ov-val">24개월</span></div>
+        <div class="ov-row"><span class="ov-key">독점 기간</span><span class="ov-val">6개월</span></div>
+        <div class="ov-row"><span class="ov-key">승인 기간</span><span class="ov-val">3일</span></div>
+        <div class="ov-row"><span class="ov-key">수정 라운드</span><span class="ov-val">2회</span></div>
+        <div class="ov-row"><span class="ov-key">결제 기간</span><span class="ov-val">40일</span></div>
+        <div class="ov-row"><span class="ov-key">담당자 (Nord)</span><span class="ov-val">Seoyeon Oh</span></div>
+        <div class="ov-row"><span class="ov-key">발효일</span><span class="ov-val">2026-04-10</span></div>
+        <div class="progress-wrap">
+          <div class="prog-label"><span>진행률</span><span id="nord-prog-label">0/5</span></div>
+          <div class="prog-bar"><div class="prog-fill nord" id="nord-prog" style="width:0%"></div></div>
+        </div>
+      </div>
+      <div class="ov-card gym">
+        <div class="ov-card-title">🟣 짐플러스 (딘자린)</div>
+        <div class="ov-row"><span class="ov-key">계약금</span><span class="ov-val" style="color:var(--gym-lite)">2,000,000원</span></div>
+        <div class="ov-row"><span class="ov-key">회차당 단가</span><span class="ov-val">200,000원</span></div>
+        <div class="ov-row"><span class="ov-key">총 회차</span><span class="ov-val">10회 (1세트)</span></div>
+        <div class="ov-row"><span class="ov-key">연장 방식</span><span class="ov-val">10회 완료 전 협의</span></div>
+        <div class="ov-row"><span class="ov-key">세금계산서</span><span class="ov-val">협의 중</span></div>
+        <div class="ov-row"><span class="ov-key">사업자 번호</span><span class="ov-val">562-86-03760</span></div>
+        <div class="ov-row"><span class="ov-key">상호</span><span class="ov-val">짐플러스헬스PT마곡역점</span></div>
+        <div class="ov-row"><span class="ov-key">대표자</span><span class="ov-val">황한결</span></div>
+        <div class="ov-row"><span class="ov-key">담당자</span><span class="ov-val">딘자린</span></div>
+        <div class="ov-row"><span class="ov-key">개업일</span><span class="ov-val">2026-03-24</span></div>
+        <div class="ov-row"><span class="ov-key">세금계산서 이메일</span><span class="ov-val" style="font-size:10px">luck7strike@naver.com</span></div>
+        <div class="progress-wrap">
+          <div class="prog-label"><span>진행률</span><span id="gym-prog-label">0/10</span></div>
+          <div class="prog-bar"><div class="prog-fill gym" id="gym-prog" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NORDVPN PANEL -->
+  <div class="panel" id="tab-nord">
+    <div class="sponsor-bar nord">
+      <div>
+        <div class="sponsor-name" style="color:var(--nord-lite)">🔵 NordVPN</div>
+        <div class="sponsor-meta">nordvpn s.a. · seoyeon.oh@nordsec.com · 결제 40일 · 승인 3일</div>
+      </div>
+      <div>
+        <div class="sponsor-amount" style="color:var(--nord-lite)">$2,700
+          <span>고정 + Revenue Share</span>
+        </div>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table id="nord-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>영상 제목</th>
+            <th>업로드 예정일</th>
+            <th>실제 업로드일</th>
+            <th>상태</th>
+            <th>단가 (USD)</th>
+            <th>수령 여부</th>
+            <th>레퍼런스 URL</th>
+            <th>바니티 URL</th>
+            <th>메모</th>
+          </tr>
+        </thead>
+        <tbody id="nord-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- GYM PANEL -->
+  <div class="panel" id="tab-gym">
+    <div class="sponsor-bar gym">
+      <div>
+        <div class="sponsor-name" style="color:var(--gym-lite)">🟣 짐플러스 (딘자린)</div>
+        <div class="sponsor-meta">짐플러스헬스PT마곡역점 · luck7strike@naver.com · 10회 200만원</div>
+      </div>
+      <div>
+        <div class="sponsor-amount" style="color:var(--gym-lite)">2,000,000원
+          <span>200,000원/회 × 10회</span>
+        </div>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table id="gym-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>영상 제목</th>
+            <th>녹화 예정일</th>
+            <th>실제 업로드일</th>
+            <th>상태</th>
+            <th>단가 (원)</th>
+            <th>세금계산서</th>
+            <th>레퍼런스 URL</th>
+            <th>홍보채널 게시</th>
+            <th>메모</th>
+          </tr>
+        </thead>
+        <tbody id="gym-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- CHANNELS PANEL -->
+  <div class="panel" id="tab-channels">
+    <div class="section-title">홍보 채널 구성</div>
+    <div class="ch-grid">
+      <div class="ch-card"><div class="icon">𝕏</div><div class="ch-name">아토믹 (X)</div><div class="ch-handle">@atomicBTC</div></div>
+      <div class="ch-card"><div class="icon">𝕏</div><div class="ch-name">오리진엑스 (X)</div><div class="ch-handle">@originx</div></div>
+      <div class="ch-card"><div class="icon">▶</div><div class="ch-name">오리진엑스 유튜브</div><div class="ch-handle">@atomicBTC</div></div>
+      <div class="ch-card"><div class="icon">▶</div><div class="ch-name">네딸바 유튜브</div><div class="ch-handle">네딸바 채널</div></div>
+      <div class="ch-card"><div class="icon">▶</div><div class="ch-name">리스펙 유튜브</div><div class="ch-handle">리스펙투자플랜</div></div>
+      <div class="ch-card"><div class="icon">🏰</div><div class="ch-name">시타델 커뮤니티</div><div class="ch-handle">Discord 공지사항</div></div>
+    </div>
+
+    <div class="section-title" style="margin-top:28px">에피소드별 홍보채널 게시 체크</div>
+    <div class="tbl-wrap" style="border-radius:10px; border-top:1px solid var(--border)">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>에피소드</th>
+            <th style="text-align:center">아토믹(X)</th>
+            <th style="text-align:center">오리진엑스(X)</th>
+            <th style="text-align:center">오리진엑스 YT</th>
+            <th style="text-align:center">네딸바 YT</th>
+            <th style="text-align:center">리스펙 YT</th>
+            <th style="text-align:center">시타델</th>
+          </tr>
+        </thead>
+        <tbody id="ch-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div class="save-notice" id="save-notice">✓ 저장됨</div>
+
+<script>
+const STATUSES = ['대기', '제작중', '승인요청', '업로드완료', '수령완료'];
+const STATUS_CLASS = {'대기':'s-wait','제작중':'s-prod','승인요청':'s-review','업로드완료':'s-done','수령완료':'s-paid'};
+const STATUS_KO = {'대기':'대기','제작중':'제작중','승인요청':'승인요청','업로드완료':'업로드완료','수령완료':'수령완료'};
+
+// ── STATE ──
+let state = JSON.parse(localStorage.getItem('sponsor-tracker') || 'null') || {
+  nord: Array.from({length:5}, (_,i) => ({
+    title: `에피소드 ${i+1} — NordVPN 통합`,
+    planned: '', uploaded: '', status: '대기',
+    ref: '', vanity: '', note: '', paid: false
+  })),
+  gym: Array.from({length:10}, (_,i) => ({
+    title: `에피소드 ${i+1} — 짐플러스 통합`,
+    planned: '', uploaded: '', status: '대기',
+    invoice: false, ref: '', note: ''
+  })),
+  ch: Array.from({length:15}, () => [false,false,false,false,false,false])
+};
+
+function save() {
+  localStorage.setItem('sponsor-tracker', JSON.stringify(state));
+  const n = document.getElementById('save-notice');
+  n.classList.add('show');
+  setTimeout(() => n.classList.remove('show'), 1500);
+}
+
+function cycleStatus(arr, idx, field) {
+  const cur = arr[idx][field];
+  const next = STATUSES[(STATUSES.indexOf(cur)+1) % STATUSES.length];
+  arr[idx][field] = next;
+  save(); render();
+}
+
+function statusBadge(s) {
+  return `<span class="status ${STATUS_CLASS[s]}">${s}</span>`;
+}
+
+function editCell(val, onchange, cls='') {
+  return `<input class="editable ${cls}" value="${val.replace(/"/g,'&quot;')}" onchange="${onchange}">`;
+}
+
+function chkBtn(done, onclick) {
+  return `<button class="ch-btn ${done?'done':''}" onclick="${onclick}">${done?'✅':''}</button>`;
+}
+
+// ── RENDER NORDVPN ──
+function renderNord() {
+  const tb = document.getElementById('nord-tbody');
+  tb.innerHTML = state.nord.map((ep, i) => `
+    <tr>
+      <td style="color:var(--nord-lite);font-weight:700">N${i+1}</td>
+      <td>${editCell(ep.title, `updateNord(${i},'title',this.value)`)}</td>
+      <td>${editCell(ep.planned, `updateNord(${i},'planned',this.value)`)}</td>
+      <td>${editCell(ep.uploaded, `updateNord(${i},'uploaded',this.value)`)}</td>
+      <td style="cursor:pointer" onclick="cycleStatus(state.nord,${i},'status')">${statusBadge(ep.status)}</td>
+      <td class="amount nord">$540.00</td>
+      <td style="cursor:pointer;text-align:center" onclick="toggleNordPaid(${i})">${ep.paid ? '<span class="status s-done">수령</span>' : '<span class="status s-wait">미수령</span>'}</td>
+      <td>${editCell(ep.ref, `updateNord(${i},'ref',this.value)`, 'url-cell')}</td>
+      <td>${editCell(ep.vanity, `updateNord(${i},'vanity',this.value)`, 'url-cell')}</td>
+      <td>${editCell(ep.note, `updateNord(${i},'note',this.value)`)}</td>
+    </tr>
+  `).join('');
+}
+
+function updateNord(i, k, v) { state.nord[i][k] = v; save(); }
+function toggleNordPaid(i) { state.nord[i].paid = !state.nord[i].paid; save(); render(); }
+
+// ── RENDER GYM ──
+function renderGym() {
+  const tb = document.getElementById('gym-tbody');
+  tb.innerHTML = state.gym.map((ep, i) => `
+    <tr>
+      <td style="color:var(--gym-lite);font-weight:700">G${i+1}</td>
+      <td>${editCell(ep.title, `updateGym(${i},'title',this.value)`)}</td>
+      <td>${editCell(ep.planned, `updateGym(${i},'planned',this.value)`)}</td>
+      <td>${editCell(ep.uploaded, `updateGym(${i},'uploaded',this.value)`)}</td>
+      <td style="cursor:pointer" onclick="cycleStatus(state.gym,${i},'status')">${statusBadge(ep.status)}</td>
+      <td class="amount gym">200,000원</td>
+      <td style="cursor:pointer;text-align:center" onclick="toggleInvoice(${i})">${ep.invoice ? '<span class="status s-done">발행</span>' : '<span class="status s-wait">미발행</span>'}</td>
+      <td>${editCell(ep.ref, `updateGym(${i},'ref',this.value)`, 'url-cell')}</td>
+      <td class="ch-cell">${chkBtn(state.ch[5+i][0], `toggleCh(${5+i},0)`)}</td>
+      <td>${editCell(ep.note, `updateGym(${i},'note',this.value)`)}</td>
+    </tr>
+  `).join('');
+}
+
+function updateGym(i, k, v) { state.gym[i][k] = v; save(); }
+function toggleInvoice(i) { state.gym[i].invoice = !state.gym[i].invoice; save(); render(); }
+
+// ── RENDER CHANNELS ──
+const CH_NAMES = ['아토믹(X)','오리진엑스(X)','오리진엑스 YT','네딸바 YT','리스펙 YT','시타델'];
+function renderChannels() {
+  const tb = document.getElementById('ch-tbody');
+  const rows = [];
+  for (let i = 0; i < 15; i++) {
+    const isNord = i < 5;
+    const label = isNord ? `N${i+1} [NordVPN] 에피소드 ${i+1}` : `G${i-4} [짐플러스] 에피소드 ${i-4}`;
+    const idStyle = isNord ? 'color:var(--nord-lite)' : 'color:var(--gym-lite)';
+    rows.push(`<tr>
+      <td style="${idStyle};font-weight:700">${isNord?'N':'G'}${isNord?i+1:i-4}</td>
+      <td>${label}</td>
+      ${state.ch[i].map((v,j) => `<td class="ch-cell">${chkBtn(v,`toggleCh(${i},${j})`)}</td>`).join('')}
+    </tr>`);
+  }
+  tb.innerHTML = rows.join('');
+}
+
+function toggleCh(i, j) { state.ch[i][j] = !state.ch[i][j]; save(); render(); }
+
+// ── STATS / PROGRESS ──
+function renderStats() {
+  const nordDone = state.nord.filter(e => e.status === '업로드완료' || e.status === '수령완료').length;
+  const gymDone = state.gym.filter(e => e.status === '업로드완료' || e.status === '수령완료').length;
+  document.getElementById('total-done').textContent = nordDone + gymDone;
+  document.getElementById('nord-prog').style.width = (nordDone/5*100) + '%';
+  document.getElementById('nord-prog-label').textContent = `${nordDone}/5`;
+  document.getElementById('gym-prog').style.width = (gymDone/10*100) + '%';
+  document.getElementById('gym-prog-label').textContent = `${gymDone}/10`;
+}
+
+// ── TABS ──
+function switchTab(id) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const ids = ['overview','nord','gym','channels'];
+    t.classList.toggle('active', ids[i] === id);
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+}
+
+// ── MAIN RENDER ──
+function render() {
+  renderNord();
+  renderGym();
+  renderChannels();
+  renderStats();
+}
+
+render();
+</script>
+</body>
+</html>
